@@ -52,6 +52,16 @@ function phone_var:create_phone()
 		draw.SimpleText(os.date("%x"), "DefaultSmall", self.time_bar:GetWide()-10, 10, Color(0, 0, 0), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 	end
 
+	-- TODO: Implement a cool system that dynamically adds app-buttons
+	-- (Although redundant while there's only one app)
+	
+	-- idea with a list of lists:
+	-- app_list = { {
+	-- posx = 20,
+	-- posy = 35
+	-- name = "Conquer Game"
+	-- button_function = function() phone_var:start_conquer_game() end } }
+
 	self.app_icon1 = self.screen:Add("DButton")
 	self.app_icon1:SetText("")
 	self.app_icon1:SetPos(20, 35)
@@ -61,7 +71,7 @@ function phone_var:create_phone()
 		draw.SimpleText("C", "CloseCaption_Bold", 18, 23, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
 	self.app_icon1.DoClick = function()
-		phone_var:start_conquer_game(LocalPlayer())
+		phone_var:start_conquer_game()
 	end
 
 	self.main_frame:MakePopup()
