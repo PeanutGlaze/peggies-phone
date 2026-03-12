@@ -48,10 +48,10 @@ function cg_save_data:load_save_game()
 
 	for _, v in pairs(lines) do
 
-		if v == "@R" then
+		if v == "@R" then	-- Resources tab
 			read_res = true
 			continue
-		elseif v == "@P" then
+		elseif v == "@P" then	-- Persons tab
 			read_res = false
 			read_per = true
 			continue
@@ -60,6 +60,7 @@ function cg_save_data:load_save_game()
 		if read_res == true then
 			table.insert(res_table, v)
 		elseif read_per == true then
+			-- This is a bit more complicated because every person has two stats they rely on
 			if skip == false then
 				temp = v
 				skip = true
@@ -92,6 +93,16 @@ function cg_save_data:save_game()
 	end
 
 	file.Write(file_path, res_string .. per_string)
+end
+
+function cg_save_data:calculate_strength()
+	result = 0
+
+	for k, v in pairs(self.per_table) do
+		result = result + (v.strength * (1 + v.level/10 - 0.1))
+	end
+
+	return result
 end
 
 function phone_var:create_game_ui()
@@ -144,35 +155,44 @@ function phone_var:create_game_ui()
 		self:refresh_game_screen(2)
 	end
 
-	self.res_bar = self.game_screen:Add("DPanel")
-	self.res_bar:Dock(TOP)
-	self.res_bar:SetTall(self.screen:GetTall()/23)
-	self.res_bar.Paint = function(s, w, h) end
+	self.info_bar = self.game_screen:Add("DPanel")
+	self.info_bar:Dock(TOP)
+	self.info_bar:SetTall(self.screen:GetTall()/23)
+	self.info_bar.Paint = function(s, w, h) end
 
-	self.res1_info = self.res_bar:Add("DPanel")
+	self.res1_info = self.info_bar:Add("DPanel")
 	self.res1_info:Dock(LEFT)
-	self.res1_info:SetWide(self.screen:GetWide()/3)
+	self.res1_info:SetWide(self.screen:GetWide()/4)
 	self.res1_info.Paint = function(s, w, h)
 		draw.RoundedBox(0, 0, 0, w, h, Color(125, 125, 125))
 		draw.RoundedBox(0, 2, 2, w-4, h-4, Color(175, 175, 175))
-		draw.SimpleText("Fuel: " .. tostring(cg_save_data.fuel), "DefaultSmall", 12, 12, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		draw.SimpleText("FL: " .. cg_save_data.fuel, "DefaultSmall", 5, 12, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
 
-	self.res2_info = self.res_bar:Add("DPanel")
+	self.res2_info = self.info_bar:Add("DPanel")
 	self.res2_info:Dock(LEFT)
-	self.res2_info:SetWide(self.screen:GetWide()/3)
+	self.res2_info:SetWide(self.screen:GetWide()/4)
 	self.res2_info.Paint = function(s, w, h)
 		draw.RoundedBox(0, 0, 0, w, h, Color(125, 125, 125))
 		draw.RoundedBox(0, 2, 2, w-4, h-4, Color(175, 175, 175))
-		draw.SimpleText("Metal: " .. tostring(cg_save_data.metal), "DefaultSmall", 12, 12, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		draw.SimpleText("MTL: " .. cg_save_data.metal, "DefaultSmall", 5, 12, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
 
-	self.res3_info = self.res_bar:Add("DPanel")
-	self.res3_info:Dock(FILL)
+	self.res3_info = self.info_bar:Add("DPanel")
+	self.res3_info:Dock(LEFT)
+	self.res3_info:SetWide(self.screen:GetWide()/4)
 	self.res3_info.Paint = function(s, w, h)
 		draw.RoundedBox(0, 0, 0, w, h, Color(125, 125, 125))
 		draw.RoundedBox(0, 2, 2, w-4, h-4, Color(175, 175, 175))
-		draw.SimpleText("$€: " .. tostring(cg_save_data.money), "DefaultSmall", 12, 12, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+		draw.SimpleText("$€: " .. cg_save_data.money, "DefaultSmall", 5, 12, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
+	end
+
+	self.res4_info = self.info_bar:Add("DPanel")
+	self.res4_info:Dock(FILL)
+	self.res4_info.Paint = function(s, w, h)
+		draw.RoundedBox(0, 0, 0, w, h, Color(125, 125, 125))
+		draw.RoundedBox(0, 2, 2, w-4, h-4, Color(175, 175, 175))
+		draw.SimpleText("STR: " .. cg_save_data:calculate_strength(), "DefaultSmall", 5, 12, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
 	end
 
 	-- Change the home button so it brings you back to the home-screen instead of closing:
@@ -192,9 +212,17 @@ function phone_var:refresh_game_screen(window_type)
 
 	self.playable_screen = self.game_screen:Add("DPanel")
 	self.playable_screen:Dock(FILL)
-	self.playable_screen.Paint = nil
+	self.playable_screen.Paint = function(s, w, h)	
+		draw.RoundedBox(0, 0, 0, w, h, Color(125, 125, 125))
+	end
 
-	if window_type == 2 then
+	-- window_type:	0 = Attack Screen	1 = Develop Screen	2 = Manage Screen
+
+	if window_type == 0 then
+
+	elseif window_type == 1 then
+
+	elseif window_type == 2 then
 		self.left_list = self.playable_screen:Add("DPanel")
 		self.left_list:Dock(LEFT)
 		self.left_list:SetWide(self.game_screen:GetWide()/2+1)
@@ -214,9 +242,23 @@ function phone_var:refresh_game_screen(window_type)
 				draw.RoundedBox(0, 0, 0, w, h, Color(125, 125, 125))
 				draw.RoundedBox(0, 2, 2, w-4, h-4, Color(175, 175, 175))
 				draw.SimpleText(k, "CloseCaption_Bold", 12, self.person:GetTall()/2-3, Color(0, 0, 0), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER)
-				draw.SimpleText("Base Strength: " .. v.strength, "Trebuchet18", self.person:GetWide()/8*7, self.person:GetTall()/4+5, Color(0, 0, 0), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
-				draw.SimpleText("Level: " .. v.level, "Trebuchet18", self.person:GetWide()/8*7, self.person:GetTall()/4*3-5, Color(0, 0, 0), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+				draw.SimpleText("Base Strength: " .. v.strength, "Trebuchet18", self.person:GetWide()/8*6, self.person:GetTall()/4+5, Color(0, 0, 0), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
+				draw.SimpleText("Level: " .. v.level, "Trebuchet18", self.person:GetWide()/8*6, self.person:GetTall()/4*3-5, Color(0, 0, 0), TEXT_ALIGN_RIGHT, TEXT_ALIGN_CENTER)
 			end
+			
+			self.rmv_button = self.person:Add("DButton")
+			self.rmv_button:Dock(RIGHT)
+			self.rmv_button:SetWide(25)
+			self.rmv_button:SetText("X")
+			self.rmv_button:SetTextColor(Color(0, 0, 0))
+			self.rmv_button.DoClick = function()
+				if #cg_save_data.per_table <= 3 then
+					LocalPlayer():PrintMessage(HUD_PRINTTALK, "You must have at least three soldiers!")
+				else
+					table.remove(cg_save_data.per_table, k)
+				end
+			end
+			
 			if counter % 2 == 1 then
 				self.person:SetParent(self.left_list)
 			else
